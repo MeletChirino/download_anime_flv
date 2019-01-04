@@ -336,21 +336,21 @@ def get_episodes_list(url, browser):
     print 'accediendo a la pag...'
     #iniciando intentos de carga de pagina
     attemps = 0 #intentos para que la pag cargue
-    timeout = 5
-    print 'Esperando pagina'
-    fail = 'ok'
-    while attemps < 3:
-        try:
-            browser.get(url)
-            element_present = EC.presence_of_element_located((By.XPATH, '//*[@id="episodeList"]'))
-            WebDriverWait(browser, timeout).until(element_present)
-            break
-        except TimeoutException:
-            attemps +=1
-            print "Timed out waiting for page to load"
-            fail = 'Fail'
-            #return "Fail"
     if(fail == 'Fail'):
+        timeout = 5
+        print 'Esperando pagina'
+        fail = 'ok'
+        while attemps < 3:
+            try:
+                browser.get(url)
+                element_present = EC.presence_of_element_located((By.XPATH, '//*[@id="episodeList"]'))
+                WebDriverWait(browser, timeout).until(element_present)
+                break
+            except TimeoutException:
+                attemps +=1
+                print "Timed out waiting for page to load"
+                fail = 'Fail'
+                #return "Fail"
         pass
     episode_list = []
     #Busca el nombre del anime y lo coloca de primero en la lista resultante
