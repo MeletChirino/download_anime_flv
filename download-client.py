@@ -322,7 +322,10 @@ switcher = {
 def main():
 
     #animes = anime('https://animeflv.net/anime/5480/ulysses-jehanne-darc-to-renkin-no-kishi')
-    animes = raw_input('Por favor coloque el link del anime a descargar')
+    link = raw_input('Por favor coloque el link del anime a descargar\n')
+    if( link == 'exit'):
+        os.exit()
+    animes = anime('link')
     print "preparando descarga"
     os.system("echo -ne '\007'")
     os.system('pause')
