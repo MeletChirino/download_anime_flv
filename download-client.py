@@ -2,6 +2,7 @@
 Cliente de descargas de animeflv.com
 """
 #import tkinter
+import sys
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
 from selenium.common.exceptions import NoSuchElementException
@@ -324,7 +325,7 @@ def main():
     #animes = anime('https://animeflv.net/anime/5480/ulysses-jehanne-darc-to-renkin-no-kishi')
     link = raw_input('Por favor coloque el link del anime a descargar\n')
     if( link == 'exit'):
-        os.exit()
+        sys.exit()
     animes = anime('link')
     print "preparando descarga"
     os.system("echo -ne '\007'")
@@ -339,7 +340,7 @@ def main():
     except:
         print "Error inesperado"
         animes.driver.quit()
-        os.exit()
+        sys.exit()
 
 if __name__== "__main__":
     main()
