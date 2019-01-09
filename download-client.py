@@ -21,7 +21,13 @@ class anime:
     metodos: check_url() download()
     '''
     def __init__(self, url):
-        self.driver = webdriver.Chrome()
+
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--window-size=1920x1080")
+        self.driver = webdriver.Chrome(chrome_options=chrome_options)
+
+        #self.driver = webdriver.Chrome()
         check_url(self.driver, url, 5, '//*[@id="episodeList"]')
         #busca el nombre del anime
         self.name = str(self.driver.find_element_by_xpath('/html/body/div[2]/div/div/div[1]/div[2]/h2').text)
@@ -71,19 +77,29 @@ class anime:
         #
         server_name = ['Mango', 'Zippy', 'Openload', 'Mega']
         capitulo = self.numero_de_capitulos - 1
+        cap = 1
         while capitulo >= 0:
             server = 0
             downloaded = False
             while not downloaded:#mientras no este descargado siga intentando con el siguiente servidor
                 server = switcher.get(server, 'nothing')
                 print "Probando con ", server
-                server.check(self.capitulos[capitulo], self.driver, capitulo, self.name)
+                server.check(self.capitulos[capitulo], self.driver, cap, self.name)
                 if server.available:
                     server.download()
+                    cap += 1
                     downloaded = True
                 else:
                     server += 1
             capitulo -= 1
+
+
+switcher = {
+    0: mango(),
+    #1: zippy(),
+    #2: openload(),
+    #3: Mega()
+    }
 
 class mango:
     def __init__(self):
@@ -121,7 +137,7 @@ class mango:
         print 'guardando en ' + path
         if (not os.path.isdir(path)):
             #si no existe el path, lo crea
-            print "Anime no descargado aun, creando carpeta"
+            print "Anime no descargado aun, creando carpeta\n" + path
             os.mkdir(path)
         else:
             print "Al parecer ya habias descargado este anime\nPor favor presione enter para continuar"
@@ -316,12 +332,6 @@ def revisar_tabla(server_name, browser):
     d_link = trim_link(d_link)
     return d_link
 
-switcher = {
-    0: mango(),
-    #1: zippy(),
-    #2: openload(),
-    #3: Mega()
-    }
 
 def main():
 
