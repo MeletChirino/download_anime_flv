@@ -75,7 +75,7 @@ class anime:
             while not downloaded:#mientras no este descargado siga intentando con el siguiente servidor
                 server = switcher.get(server, 'nothing')
                 print "Probando con ", server
-                server.check(self.capitulos[capitulo], self.driver)
+                server.check(self.capitulos[capitulo], self.driver, capitulo, self.name)
                 if server.available:
                     server.download()
                     downloaded = True
@@ -84,8 +84,12 @@ class anime:
             capitulo -= 1
 
 class mango:
+    def __init__(self):
+        pass
 
-    def check(self, url, browser):
+    def check(self, url, browser, capitulo, name):
+        self.name = name #esta linea solo ingresa el nombre del anime, para tenerlo dentro de la class mango
+        self.cap_number = capitulo #esta linea da el numero del capitulo, para tenerlo en cuenta dentro de la class mango
         # esta funcion sera como el get_mango_link
         print 'Accediendo a ' + url
         self.available = check_url(browser, url, 5, '//*[@id="XpndCn"]/div[2]/div[1]/span[3]')
@@ -108,8 +112,49 @@ class mango:
         link = link.replace('https','http')
         self.link_mp4 = link
 
-
     def download(self):#metodo de descarga de mango
+        #crear carpeta
+        #primero verificar si la carpeta ya existe
+        path = '/home/melet/Videos/' + self.name
+        if (not os.path.isdir(path)):
+            #si no existe el path, lo crea
+            os.mkdir(path)
+        else:
+            print "Al parecer ya habias descargado este anime\nPor favor presione enter para continuar"
+            os.system('pause')
+
+        downloaded = False
+        url = self.new_mp4
+        print '\ndescargando capitulo ' + str(self.cap_number)
+        print 'link = ' + url
+        name_path = new_path + "/" + self.name + "-" + str(self.cap_number) + ".mp4"
+        print 'Guardando en ' + name_path
+        #primero revisa a ver si el archivo ya esta Descargado
+        downloaded = os.path.isfile(name_path)
+        if downloaded:
+            print "Archivo ya descargado\nPor favor verifique el archivo"
+        attemps = 1
+        while not downloaded or attemps < 5:#mientras no este descargado el archivo haga esto
+            try:
+                r = requests.get(url)
+                with open(name_path, 'wb') as f:
+                    f.write(r.content)
+                    f.close()
+                    command = "echo -ne '\007'"
+                    os.system(command)
+                    downloaded = True
+                    numero_de_capitulo += 1
+                print "Descargado"
+            except Exception as e:
+                attemps += 1
+                print 'error'
+                print e
+                print 'descargando el archivo nuevamente'
+                if attemps >= 5:
+                    print 'Maximo de intentos alcanzado'
+                    return 'Fail'
+
+
         print 'descargando ', self.link_mp4
 '''
 class zippy: # Agregarle los xpath
@@ -276,13 +321,22 @@ switcher = {
 
 def main():
 
-    animes = anime('https://animeflv.net/anime/5480/ulysses-jehanne-darc-to-renkin-no-kishi')
-    print "Nombre  = ", animes.name
-    print "\nEstado = ", animes.state
-    print "\nSinopsis = ", animes.sinopsis
-    print '\nCapitulos = ', animes.capitulos
-    print '\nDescargando ', animes.download()
-    animes.driver.quit()
+    #animes = anime('https://animeflv.net/anime/5480/ulysses-jehanne-darc-to-renkin-no-kishi')
+    animes = raw_input('Por favor coloque el link del anime a descargar')
+    print "preparando descarga"
+    os.system("echo -ne '\007'")
+    os.system('pause')
+    try:
+        print "Nombre  = ", animes.name
+        print "\nEstado = ", animes.state
+        print "\nSinopsis = ", animes.sinopsis
+        print '\nCapitulos = ', animes.capitulos
+        print '\nDescargando ', animes.download()
+        animes.driver.quit()
+    except:
+        print "Error inesperado"
+        animes.driver.quit()
+        os.exit()
 
 if __name__== "__main__":
     main()
