@@ -2,6 +2,7 @@
 Cliente de descargas de animeflv.com
 """
 #import tkinter
+import requests
 import sys
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException
@@ -12,7 +13,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
 import os
 
-mother_path = '/home/melet/Videos'
+mother_path = '/home/melet/Videos/Animes'
 
 class anime:
     '''
@@ -116,19 +117,21 @@ class mango:
     def download(self):#metodo de descarga de mango
         #crear carpeta
         #primero verificar si la carpeta ya existe
-        path = mother_path + self.name
+        path = mother_path + '/' + self.name
+        print 'guardando en ' + path
         if (not os.path.isdir(path)):
             #si no existe el path, lo crea
+            print "Anime no descargado aun, creando carpeta"
             os.mkdir(path)
         else:
             print "Al parecer ya habias descargado este anime\nPor favor presione enter para continuar"
             os.system('pause')
 
         downloaded = False
-        url = self.new_mp4
+        url = self.link_mp4
         print '\ndescargando capitulo ' + str(self.cap_number)
         print 'link = ' + url
-        name_path = new_path + "/" + self.name + "-" + str(self.cap_number) + ".mp4"
+        name_path = path + "/" + self.name + "-" + str(self.cap_number) + ".mp4"
         print 'Guardando en ' + name_path
         #primero revisa a ver si el archivo ya esta Descargado
         downloaded = os.path.isfile(name_path)
@@ -326,7 +329,7 @@ def main():
     link = raw_input('Por favor coloque el link del anime a descargar\n')
     if( link == 'exit'):
         sys.exit()
-    animes = anime('link')
+    animes = anime(link)
     print "preparando descarga"
     os.system("echo -ne '\007'")
     os.system('pause')
@@ -337,8 +340,9 @@ def main():
         print '\nCapitulos = ', animes.capitulos
         print '\nDescargando ', animes.download()
         animes.driver.quit()
-    except:
-        print "Error inesperado"
+    except Exception as er:
+        print "Error inesperado\n"
+        print er
         animes.driver.quit()
         sys.exit()
 
