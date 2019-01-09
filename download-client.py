@@ -115,7 +115,7 @@ class mango:
     def download(self):#metodo de descarga de mango
         #crear carpeta
         #primero verificar si la carpeta ya existe
-        path = '/home/melet/Videos/' + self.name
+        path = mother_path + self.name
         if (not os.path.isdir(path)):
             #si no existe el path, lo crea
             os.mkdir(path)
