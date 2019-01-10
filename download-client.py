@@ -17,17 +17,20 @@ mother_path = '/home/melet/Videos/Animes'
 
 class anime:
     '''
-    atributos: name, state, capitulos[], driver, numero_de_capitulos
-    metodos: check_url() download()
+    atributos: name, state, capitulos[], driver, numero_de_capitulos, cover
+    metodos: check_url() download() info_file() get_cover()
     '''
     def __init__(self, url):
 
-        chrome_options = Options()
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--window-size=1920x1080")
-        self.driver = webdriver.Chrome(chrome_options=chrome_options)
+        headless = raw_input('Desea ver el driver?(y/n)')
+        if headless == 'Y' or headless == 'y' or headless == 'yes' or headless == 'Yes':
+            self.driver = webdriver.Chrome()
+        else:
+            chrome_options = Options()
+            chrome_options.add_argument("--headless")
+            chrome_options.add_argument("--window-size=1920x1080")
+            self.driver = webdriver.Chrome(chrome_options=chrome_options)
 
-        #self.driver = webdriver.Chrome()
         check_url(self.driver, url, 5, '//*[@id="episodeList"]')
         #busca el nombre del anime
         self.name = str(self.driver.find_element_by_xpath('/html/body/div[2]/div/div/div[1]/div[2]/h2').text)
@@ -70,8 +73,62 @@ class anime:
             except Exception as e:
                 epis = False
                 print "error: "
-                print e
+                print e # este while extrae los capitulos uno por uno
         self.numero_de_capitulos = xpath_index - 1#self.driver.quit()
+        self.info_file()
+        self.cover = self.get_cover()
+
+    def info_file(self):
+        #crear carpeta
+        path = mother_path + '/' + self.name
+        print 'guardando en ' + path
+        if (not os.path.isdir(path)):
+            #si no existe el path, lo crea
+            print "Anime no descargado aun, creando carpeta\n" + path
+            os.mkdir(path)
+        else:
+            print "Al parecer ya habias descargado este anime"
+            os.system('pause')
+        name_path = path + '/info.md'
+        #Escribir archivo en path
+        if os.isfile(name_path):
+            print 'archivo info.md ya esta creado'
+            return None
+        with open(name_path, 'wb') as f:
+            f.write(self.name.encode('utf-8') + '\n')
+            f.write(self.state.encode('utf-8') + '\n')
+            f.write(self.sinopsis.encode('utf-8') + '\n')
+            f.write('Episodios:\n')
+            caps = len(self.capitulos)
+            i = caps - 1
+            while i > 2:
+                f.write(self.capitulos[i].encode('utf-8') + '\n')
+                i -= 1
+            f.close()
+        return None
+
+    def get_cover(self):
+        timeout = 5
+        attemps = 0
+        print 'getting cover'
+        while attemps < 3:
+            try:
+                href = self.driver.find_element_by_xpath('/html/body/div[2]/div/div/div[2]/div/aside/div[1]/div/figure/img')
+                link = href.get_attribute('src').encode('ascii','ignore')
+                print "link mp4: " + link
+                r = requests.get(link)
+                name_path = mother_path + "/" + self.name + '/cover.jpg'
+                print 'Guardando cover en ' + name_path
+                with open(name_path, 'wb') as f:
+                    f.write(r.content)
+                    f.close()
+                break
+            except TimeoutException:
+                attemps +=1
+                print "Timed out waiting for page to load"
+                fail = 'Fail'
+                #return "Fail" # while que descarga la imagen
+        return name_path
 
     def download(self):
         #
@@ -79,27 +136,24 @@ class anime:
         capitulo = self.numero_de_capitulos - 1
         cap = 1
         while capitulo >= 0:
-            server = 0
+            server_index = 0
             downloaded = False
-            while not downloaded:#mientras no este descargado siga intentando con el siguiente servidor
-                server = switcher.get(server, 'nothing')
-                print "Probando con ", server
+            while not downloaded:# mientras no este descargado siga intentando con el siguiente servidor
+                server = switcher.get(server_index, 'nothing')
+                print "Probando con ", server_name[server_index]
                 server.check(self.capitulos[capitulo], self.driver, cap, self.name)
                 if server.available:
                     server.download()
                     cap += 1
                     downloaded = True
+                    print 'Archivo descargado a traves de ', server_name[server_index]
                 else:
-                    server += 1
+                    server_index += 1
+                    if serve_index >= 5:
+                        downloaded = True
+                        print "Error, ningun servidor funciona"
+
             capitulo -= 1
-
-
-switcher = {
-    0: mango(),
-    #1: zippy(),
-    #2: openload(),
-    #3: Mega()
-    }
 
 class mango:
     def __init__(self):
@@ -132,16 +186,7 @@ class mango:
 
     def download(self):#metodo de descarga de mango
         #crear carpeta
-        #primero verificar si la carpeta ya existe
         path = mother_path + '/' + self.name
-        print 'guardando en ' + path
-        if (not os.path.isdir(path)):
-            #si no existe el path, lo crea
-            print "Anime no descargado aun, creando carpeta\n" + path
-            os.mkdir(path)
-        else:
-            print "Al parecer ya habias descargado este anime\nPor favor presione enter para continuar"
-            os.system('pause')
 
         downloaded = False
         url = self.link_mp4
@@ -154,7 +199,7 @@ class mango:
         if downloaded:
             print "Archivo ya descargado\nPor favor verifique el archivo"
         attemps = 1
-        while not downloaded or attemps < 5:#mientras no este descargado el archivo haga esto
+        while not downloaded:#mientras no este descargado el archivo haga esto
             try:
                 r = requests.get(url)
                 with open(name_path, 'wb') as f:
@@ -163,8 +208,7 @@ class mango:
                     command = "echo -ne '\007'"
                     os.system(command)
                     downloaded = True
-                    numero_de_capitulo += 1
-                print "Descargado"
+                print "Descargado " + name_path
             except Exception as e:
                 attemps += 1
                 print 'error'
@@ -172,10 +216,8 @@ class mango:
                 print 'descargando el archivo nuevamente'
                 if attemps >= 5:
                     print 'Maximo de intentos alcanzado'
-                    return 'Fail'
+                    downloaded = True
 
-
-        print 'descargando ', self.link_mp4
 '''
 class zippy: # Agregarle los xpath
 
@@ -332,6 +374,12 @@ def revisar_tabla(server_name, browser):
     d_link = trim_link(d_link)
     return d_link
 
+switcher = {
+    0: mango(),
+    #1: zippy(),
+    #2: openload(),
+    #3: Mega()
+    }
 
 def main():
 
@@ -345,6 +393,7 @@ def main():
     os.system('pause')
     try:
         print "Nombre  = ", animes.name
+        anime.info_file()
         print "\nEstado = ", animes.state
         print "\nSinopsis = ", animes.sinopsis
         print '\nCapitulos = ', animes.capitulos
