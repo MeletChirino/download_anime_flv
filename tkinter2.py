@@ -28,6 +28,11 @@ class UI(tk.Frame):
         self.download_button = tk.Button(self.parent, text="Descargar anime", command=self.download)
         self.cover_label = tk.Label(self.parent)
 
+        #self.add_button = tk.Button(self.parent, text="Add", command=self.add_button)
+        #self.i = 0
+        #self.links = []
+        #self.add_button.grid(row=1, column=3)
+
         self.nombre.grid(row=1, columnspan=4)
         self.link_bar.grid(row=2, columnspan=4)
         self.headless.grid(row=3, column=0)
@@ -37,8 +42,15 @@ class UI(tk.Frame):
         self.download_button.grid(row=3, column=3)
         self.cover_label.grid(row=1, rowspan=7, column=4, columnspan=2)
 
+    def add_button(self):
+        texto = self.link_bar.get("1.0",'end-1c').encode('utf-8')
+        self.links.append(texto)
+        print self.links[self.i], ' en ', self.i
+        self.i += 1
+
+
     def print1(self):
-        texto = self.link_bar.get("1.0",'end-1c')
+        texto = self.link_bar.get("1.0",'end-1c').encode('utf-8')
         self.boton.configure({'text':'Cargando'})
         self.animes = anime(texto, self.headless_var.get())
         #print texto
